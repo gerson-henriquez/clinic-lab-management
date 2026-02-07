@@ -1,0 +1,18 @@
+# SSL Certificates Directory
+#
+# For production deployment:
+# 1. Obtain SSL certificates from Let's Encrypt or your provider
+# 2. Place certificate files here:
+#    - cert.pem (or fullchain.pem)
+#    - key.pem (or privkey.pem)
+#
+# For development:
+# - SSL is not required (using HTTP)
+# - You can generate self-signed certificates for testing if needed
+#
+# Example to generate self-signed certificate (for testing only):
+# openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+#   -keyout key.pem -out cert.pem
+
+# This file ensures the directory exists in git
+.gitkeep

@@ -1,0 +1,96 @@
+# Docker Compose Production Overrides
+#
+# This file extends docker-compose.yml for production deployment
+# 
+# Usage:
+#   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Production differences:
+# - No volume mounts for code (baked into images)
+# - Use production-optimized builds
+# - Remove debug ports
+# - Add resource limits
+# - Enable SSL/HTTPS
+
+version: '3.8'
+
+services:
+  db:
+    # Remove exposed port for security
+    ports: []
+    # Add resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+  redis:
+    # Remove exposed port for security
+    ports: []
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M
+
+  backend:
+    # Use production build
+    command: gunicorn clinical_lab.wsgi:application --bind 0.0.0.0:8000 --workers 4 --timeout 60
+    # No code volume mounting in production
+    volumes:
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    # Remove exposed port for security
+    ports: []
+    environment:
+      - DEBUG=False
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+  frontend:
+    # Use production build
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: runner
+    # No code volume mounting in production
+    volumes: []
+    # Remove exposed port for security
+    ports: []
+    environment:
+      - NODE_ENV=production
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+
+  nginx:
+    # Enable HTTPS in production
+    ports:
+      - "80:80"
+      - "443:443"
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.1'
+          memory: 64M

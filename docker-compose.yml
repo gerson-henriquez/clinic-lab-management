@@ -1,0 +1,170 @@
+# Docker Compose Configuration for Clinical Lab Management Application
+# Development Environment
+#
+# NOTE: Docker Compose v2 is used (docker compose, not docker-compose)
+#
+# This file orchestrates all services needed for local development:
+# - PostgreSQL database
+# - Redis cache
+# - Django backend
+# - Next.js frontend
+# - Nginx reverse proxy
+#
+# For development teams new to Docker Compose:
+# - All services run in isolated containers
+# - Services communicate via internal Docker network
+# - Only Nginx (port 80) is exposed to host machine
+# - Data persists in named volumes (survives container restarts)
+#
+# Quick Start:
+#   docker compose up -d         # Start all services
+#   docker compose logs -f       # View logs
+#   docker compose down          # Stop all services
+#   docker compose down -v       # Stop and remove volumes (clean slate)
+
+services:
+  # PostgreSQL Database
+  # Main database for all application data
+  db:
+    image: postgres:15-alpine
+    container_name: clinical_lab_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: clinical_lab_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    # NOTE: Port NOT exposed to host - only accessible via Docker network
+    networks:
+      - clinical_lab_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  # Used for session storage and caching
+  redis:
+    image: redis:7-alpine
+    container_name: clinical_lab_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    # NOTE: Port NOT exposed to host - only accessible via Docker network
+    networks:
+      - clinical_lab_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Django Backend API
+  # REST API server for all business logic
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: clinical_lab_backend
+    restart: unless-stopped
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/mediafiles
+    env_file:
+      - ./backend/.env
+    # NOTE: Port NOT exposed to host - only accessible via Docker network
+    # All traffic goes through Nginx on port 80
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - clinical_lab_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Next.js Frontend
+  # React application for user interface
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+    container_name: clinical_lab_frontend
+    restart: unless-stopped
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    env_file:
+      - ./frontend/.env.local
+    # NOTE: Port NOT exposed to host - only accessible via Docker network
+    # All traffic goes through Nginx on port 80
+    depends_on:
+      - backend
+    networks:
+      - clinical_lab_network
+    environment:
+      - NODE_ENV=development
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Nginx Reverse Proxy
+  # Routes traffic to frontend/backend
+  # ONLY service exposed to host machine
+  nginx:
+    image: nginx:alpine
+    container_name: clinical_lab_nginx
+    restart: unless-stopped
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/mediafiles:ro
+    ports:
+      - "80:80"      # HTTP (main entry point)
+      # - "443:443"  # HTTPS (uncomment for production)
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - clinical_lab_network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+# Named Volumes
+# Persist data across container restarts
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  static_volume:
+    driver: local
+  media_volume:
+    driver: local
+
+# Networks
+# Internal network for service communication
+# Services cannot be accessed from outside except through Nginx
+networks:
+  clinical_lab_network:
+    driver: bridge

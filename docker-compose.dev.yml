@@ -1,0 +1,34 @@
+# Docker Compose Development Override
+# 
+# This file provides direct port access for debugging purposes.
+# Use this ONLY during active development when you need direct access to services.
+#
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+#
+# OR add to Makefile:
+#   make dev-start  (with direct port access)
+#   make start      (production-like, Nginx only)
+#
+# WARNING: Do NOT use this configuration in production!
+
+services:
+  # Expose database port for DB management tools
+  db:
+    ports:
+      - "5432:5432"  # PostgreSQL - for pgAdmin, DBeaver, etc.
+
+  # Expose Redis port for Redis CLI debugging
+  redis:
+    ports:
+      - "6379:6379"  # Redis - for redis-cli, RedisInsight, etc.
+
+  # Expose backend port for API testing tools
+  backend:
+    ports:
+      - "8000:8000"  # Django - for Postman, curl, direct API testing
+
+  # Expose frontend port for direct Next.js access
+  frontend:
+    ports:
+      - "3000:3000"  # Next.js - for direct frontend debugging
