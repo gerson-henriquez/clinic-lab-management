@@ -1,6 +1,0 @@
----
-description: Use when implementing features, writing code, or making architecture or technology decisions. Refer to plan.md for project architecture, tech stack, recommendations, and best practices.
-alwaysApply: false
----
-
-Always refer to the plan.md file to get context on the project architecture, technologies, recommendations, and best practices when building code.
