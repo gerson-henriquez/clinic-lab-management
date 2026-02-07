@@ -69,3 +69,5 @@ nginx/ssl/*.crt
 # OS
 Thumbs.db
 .DS_Store
+
+.cursor/
