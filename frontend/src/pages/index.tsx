@@ -1,85 +1,85 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
+import LoginForm from '@/components/auth/LoginForm'
+import LoginHero from '@/components/auth/LoginHero'
+import Logo from '@/components/Common/Logo'
 
 /**
- * Home Page / Login Page
+ * Login Page
  * 
- * This is the landing page of the application.
- * For now, it's a simple placeholder. Will be replaced with:
- * - Login form for authenticated users
- * - Redirect to dashboard if already logged in
+ * Main entry point for the application
+ * Features a split-screen layout:
+ * - Left: Brand hero section with features (desktop only)
+ * - Right: Login form
  * 
- * Next Steps (Phase 2):
- * - Add login form
- * - Integrate with authentication API
- * - Add form validation
- * - Handle login errors
+ * Design: Clinical Modern concept with DiagnosticLab brand colors
+ * Responsive: Stacks vertically on mobile, side-by-side on desktop
+ * 
+ * Note: UI text in Spanish, code/comments in English
+ * 
+ * Phase 2 TODO:
+ * - Integrate with Django authentication API
+ * - Add session management
+ * - Implement "Remember me" functionality
+ * - Add password reset flow
  */
 
-const Home: NextPage = () => {
+const LoginPage: NextPage = () => {
   return (
     <>
       <Head>
-        <title>Clinical Lab Management</title>
-        <meta name="description" content="Clinical Laboratory Management Application" />
+        <title>DiagnosticLab - Login</title>
+        <meta name="description" content="Inicie sesión en DiagnosticLab - Sistema de Gestión de Laboratorio Clínico" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" href="/images/logo_icon.png" />
       </Head>
-      
-      <main className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full space-y-8 p-8">
-          <div className="text-center">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Clinical Lab Management
-            </h1>
-            <p className="text-lg text-gray-600 mb-8">
-              Laboratory Information Management System
-            </p>
-            
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-                Welcome to LabApp V2
-              </h2>
-              <p className="text-gray-600 mb-4">
-                Your comprehensive solution for clinical laboratory management.
+
+      <div className="min-h-screen flex">
+        {/* Left Panel - Brand Hero (Hidden on mobile) */}
+        <LoginHero />
+
+        {/* Right Panel - Login Form */}
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-clinical-light-bg">
+          <div className="w-full max-w-md">
+            {/* Mobile Logo (Shown only on small screens) */}
+            <div className="md:hidden mb-8 text-center">
+              <Logo size="lg" className="justify-center mb-4" />
+              <h1 className="text-2xl font-bold text-gray-900">
+                Bienvenido de Nuevo
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Inicie sesión para acceder a su panel
               </p>
-              
-              <div className="space-y-3 text-left">
-                <div className="flex items-start">
-                  <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-gray-700">Exam Order Management</span>
-                </div>
-                <div className="flex items-start">
-                  <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-gray-700">Patient Clinical Records</span>
-                </div>
-                <div className="flex items-start">
-                  <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-gray-700">Multi-Branch Support</span>
-                </div>
-                <div className="flex items-start">
-                  <svg className="h-6 w-6 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <span className="text-gray-700">Financial Reports & Billing</span>
-                </div>
+            </div>
+
+            {/* Login Card */}
+            <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 animate-fade-in">
+              {/* Desktop Header */}
+              <div className="hidden md:block mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2 text-center">
+                  Iniciar Sesión
+                </h2>
+                <p className="text-gray-600">
+                  Ingrese sus credenciales para acceder a su cuenta
+                </p>
               </div>
-              
-              <button className="mt-6 w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors">
-                Login (Coming Soon)
-              </button>
+
+              {/* Login Form */}
+              <LoginForm />
+            </div>
+
+            {/* Additional Info */}
+            <div className="mt-6 text-center text-sm text-gray-600">
+              <p>¿Tiene problemas para iniciar sesión?</p>
+              <p className="mt-1">
+                Contacte a su administrador de sistema o soporte técnico
+              </p>
             </div>
           </div>
         </div>
-      </main>
+      </div>
     </>
   )
 }
 
-export default Home
+export default LoginPage

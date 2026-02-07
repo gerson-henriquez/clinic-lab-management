@@ -1,0 +1,21 @@
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle with brand green -->
+  <circle cx="90" cy="90" r="85" fill="#00C853"/>
+  
+  <!-- Flask shape in white -->
+  <g fill="white">
+    <!-- Flask neck -->
+    <rect x="75" y="30" width="30" height="25" rx="2"/>
+    
+    <!-- Flask body -->
+    <path d="M 60 55 L 75 55 L 75 90 Q 75 110 90 110 Q 105 110 105 90 L 105 55 L 120 55 Q 120 60 118 65 L 95 120 Q 90 130 85 120 L 62 65 Q 60 60 60 55 Z" />
+    
+    <!-- Liquid inside -->
+    <ellipse cx="90" cy="95" rx="22" ry="12" fill="#00843D" opacity="0.5"/>
+  </g>
+  
+  <!-- Microscope icon -->
+  <g fill="white" transform="translate(85, 88) scale(0.15)">
+    <circle cx="0" cy="0" r="15"/>
+  </g>
+</svg>

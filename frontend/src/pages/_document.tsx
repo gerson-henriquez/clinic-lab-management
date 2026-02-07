@@ -14,10 +14,15 @@ import { Html, Head, Main, NextScript } from 'next/document'
 
 export default function Document() {
   return (
-    <Html lang="en">
+    <Html lang="es">
       <Head>
-        {/* Add custom fonts, meta tags, or external scripts here */}
-        <meta name="description" content="Clinical Laboratory Management Application" />
+        {/* Favicon - using PNG icon without background */}
+        <link rel="icon" type="image/png" href="/images/logo_icon.png" />
+        <link rel="apple-touch-icon" href="/images/logo_icon.png" />
+        
+        {/* Meta tags */}
+        <meta name="description" content="Sistema de Gestión de Laboratorio Clínico" />
+        <meta name="theme-color" content="#00C853" />
       </Head>
       <body>
         <Main />
