@@ -36,7 +36,8 @@ services:
       POSTGRES_INITDB_ARGS: "--encoding=UTF8"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # NOTE: Port NOT exposed to host - only accessible via Docker network
+    ports:
+      - "5432:5432"  # Exposed for local development
     networks:
       - clinical_lab_network
     healthcheck:
@@ -55,7 +56,8 @@ services:
     command: redis-server --appendonly yes --save 60 1000
     volumes:
       - redis_data:/data
-    # NOTE: Port NOT exposed to host - only accessible via Docker network
+    ports:
+      - "6379:6379"  # Exposed for local development
     networks:
       - clinical_lab_network
     healthcheck:

@@ -56,11 +56,14 @@ INSTALLED_APPS = [
     
     # Third-party apps
     'rest_framework',  # Django REST Framework for API
+    'rest_framework_simplejwt',  # JWT authentication
+    'rest_framework_simplejwt.token_blacklist',  # Token blacklisting
     'corsheaders',     # CORS headers for frontend communication
     'django_filters',  # Advanced filtering for API endpoints
+    'drf_spectacular',  # API documentation (Swagger/OpenAPI)
     
     # Our custom apps (all clinical lab modules)
-    'apps.auth',            # User authentication & RBAC
+    'apps.auth.apps.AuthenticationConfig',  # User authentication & RBAC
     'apps.patients',        # Patient management & clinical records
     'apps.exams',           # Exam orders & types
     'apps.reports',         # Exam results & reporting
@@ -135,6 +138,11 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
+#
+# Enhanced password security with Argon2 (better than bcrypt)
+
+# Custom User Model
+AUTH_USER_MODEL = 'authentication.User'
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -142,6 +150,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,  # Minimum 8 characters
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -149,6 +160,14 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+# Password Hashing - Argon2 is more secure than default PBKDF2
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',  # Primary (most secure)
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',  # Fallback
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
 ]
 
 
@@ -196,7 +215,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # JWT for API
+        'rest_framework.authentication.SessionAuthentication',  # Session for admin
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -209,8 +229,66 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    # API Documentation (Swagger/OpenAPI)
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # Security: Don't expose API in browsable format in production
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
+    ] if not DEBUG else [
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ],
+}
+
+
+# ==============================================================================
+# API DOCUMENTATION (Swagger/OpenAPI)
+# ==============================================================================
+#
+# drf-spectacular configuration for automatic API documentation
+# Access at: /api/docs/ (Swagger UI) and /api/redoc/ (ReDoc)
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Clinical Lab Management API',
+    'DESCRIPTION': 'RESTful API for Clinical Laboratory Management System',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'CONTACT': {
+        'name': 'Clinical Lab Team',
+        'email': 'admin@lab.com',
+    },
+    'LICENSE': {
+        'name': 'Proprietary',
+    },
+    # Schema generation settings
+    'COMPONENT_SPLIT_REQUEST': True,
+    'SCHEMA_PATH_PREFIX': r'/api/',
+    # Security schemes
+    'SECURITY': [
+        {
+            'Bearer': {
+                'type': 'http',
+                'scheme': 'bearer',
+                'bearerFormat': 'JWT',
+            }
+        }
+    ],
+    # UI settings
+    'SWAGGER_UI_SETTINGS': {
+        'deepLinking': True,
+        'persistAuthorization': True,
+        'displayOperationId': True,
+    },
+    # Tags for API organization
+    'TAGS': [
+        {'name': 'Authentication', 'description': 'User authentication and authorization'},
+        {'name': 'Users', 'description': 'User management'},
+        {'name': 'Patients', 'description': 'Patient records management'},
+        {'name': 'Orders', 'description': 'Exam orders management'},
+        {'name': 'Results', 'description': 'Exam results and reports'},
+        {'name': 'Billing', 'description': 'Invoices and payments'},
+        {'name': 'Finance', 'description': 'Financial reports'},
+        {'name': 'Branches', 'description': 'Branch management'},
     ],
 }
 
@@ -360,3 +438,86 @@ LOGGING = {
 #     GS_AUTO_CREATE_BUCKET = False
 #     GS_DEFAULT_ACL = 'private'
 #     GS_FILE_OVERWRITE = False
+
+
+# ==============================================================================
+# JWT AUTHENTICATION CONFIGURATION
+# ==============================================================================
+#
+# JSON Web Token (JWT) settings for secure authentication
+# - Short-lived access tokens (15 minutes)
+# - Long-lived refresh tokens (7 days)
+# - Token rotation on refresh for enhanced security
+
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
+    'ROTATE_REFRESH_TOKENS': True,  # Issue new refresh token on refresh
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
+    'UPDATE_LAST_LOGIN': True,
+    
+    'ALGORITHM': 'HS256',
+    'SIGNING_KEY': SECRET_KEY,
+    'VERIFYING_KEY': None,
+    'AUDIENCE': None,
+    'ISSUER': 'clinical_lab',
+    
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'TOKEN_TYPE_CLAIM': 'token_type',
+    
+    'JTI_CLAIM': 'jti',  # JWT ID for token blacklisting
+    
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(minutes=15),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
+}
+
+
+# ==============================================================================
+# AUTHENTICATION BACKENDS
+# ==============================================================================
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default Django auth
+]
+
+
+# ==============================================================================
+# RATE LIMITING CONFIGURATION
+# ==============================================================================
+#
+# Rate limiting to prevent brute force attacks
+# - Login: 5 attempts per minute per IP
+# - API endpoints: 100 requests per minute per user
+
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'  # Use Redis for rate limiting
+
+
+# ==============================================================================
+# AUDIT LOGGING CONFIGURATION
+# ==============================================================================
+#
+# Settings for audit logging system
+
+AUDIT_LOG_RETENTION_DAYS = env.int('AUDIT_LOG_RETENTION_DAYS', default=365)  # Keep 1 year
+AUDIT_LOG_SENSITIVE_FIELDS = ['password', 'token', 'secret', 'key']  # Never log these
+
+
+# ==============================================================================
+# ACCOUNT SECURITY CONFIGURATION
+# ==============================================================================
+#
+# Account lockout and security settings
+
+ACCOUNT_LOCKOUT_THRESHOLD = 5  # Lock after 5 failed attempts
+ACCOUNT_LOCKOUT_DURATION = 30  # Lock for 30 minutes
+PASSWORD_RESET_TIMEOUT = 3600  # Password reset link valid for 1 hour
+
