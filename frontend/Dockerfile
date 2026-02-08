@@ -1,52 +1,79 @@
-# Use official Node.js LTS as base image
-FROM node:18-alpine AS base
+# Multi-stage Dockerfile for Next.js
+# Optimized for fast builds and small image sizes
 
-# Install dependencies only when needed
-FROM base AS deps
+# Stage 1: Dependencies
+FROM node:18-alpine AS deps
 RUN apk add --no-cache libc6-compat
+
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
-# Use npm install instead of npm ci when package-lock.json doesn't exist
-RUN npm install
+COPY package.json package-lock.json* ./
 
-# Development image
-FROM base AS dev
+# Install dependencies
+# Use npm ci if package-lock exists, otherwise npm install
+RUN if [ -f package-lock.json ]; then \
+      npm ci --only=production --ignore-scripts; \
+    else \
+      npm install --production --ignore-scripts; \
+    fi
+
+# Stage 2: Development dependencies
+FROM node:18-alpine AS dev-deps
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /app
+COPY package.json package-lock.json* ./
+
+RUN if [ -f package-lock.json ]; then \
+      npm ci; \
+    else \
+      npm install; \
+    fi
+
+# Stage 3: Development image (default for docker-compose)
+FROM node:18-alpine AS dev
 WORKDIR /app
 
-# Copy node_modules from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy node_modules from dev-deps stage
+COPY --from=dev-deps /app/node_modules ./node_modules
 COPY . .
 
 # Expose port
 EXPOSE 3000
 
 # Set environment
-ENV NODE_ENV=development
+ENV NODE_ENV=development \
+    NEXT_TELEMETRY_DISABLED=1
 
-# Run development server
+# Run development server with turbo for faster builds
 CMD ["npm", "run", "dev"]
 
-# Production build stage
-FROM base AS builder
+# Stage 4: Builder - Build the application
+FROM node:18-alpine AS builder
 WORKDIR /app
 
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=dev-deps /app/node_modules ./node_modules
 COPY . .
+
+# Disable telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
 RUN npm run build
 
-# Production image
-FROM base AS runner
+# Stage 5: Production runner - Final lightweight image
+FROM node:18-alpine AS runner
 WORKDIR /app
 
-ENV NODE_ENV=production
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
 
+# Copy necessary files from builder
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
@@ -55,6 +82,7 @@ USER nextjs
 
 EXPOSE 3000
 
-ENV PORT 3000
+ENV PORT=3000 \
+    HOSTNAME="0.0.0.0"
 
 CMD ["node", "server.js"]

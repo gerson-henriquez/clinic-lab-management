@@ -112,19 +112,21 @@ export default function LoginForm() {
       </div>
 
       <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label className="flex items-center gap-2 cursor-pointer group">
           <input
             type="checkbox"
             checked={formData.rememberMe}
             onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
-            className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500 focus:ring-2"
+            className="w-4 h-4 text-brand-600 dark:text-brand-500 bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 rounded focus:ring-brand-500 dark:focus:ring-brand-400 focus:ring-2 transition-all"
           />
-          <span className="text-sm text-gray-700">Recordarme</span>
+          <span className="text-sm text-gray-700 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+            Recordarme
+          </span>
         </label>
 
         <a
           href="#"
-          className="text-sm font-medium text-brand-600 hover:text-brand-700 transition-colors"
+          className="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors underline-offset-4 hover:underline"
           onClick={(e) => {
             e.preventDefault()
             // TODO Phase 2: Implement forgot password flow
@@ -136,8 +138,8 @@ export default function LoginForm() {
       </div>
 
       {loginError && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{loginError}</p>
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-600 dark:text-red-400">{loginError}</p>
         </div>
       )}
 
@@ -151,7 +153,7 @@ export default function LoginForm() {
         {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
       </Button>
 
-      <p className="text-center text-sm text-gray-600 mt-4">
+      <p className="text-center text-sm text-gray-600 dark:text-slate-400 mt-4">
         ¿Primera vez aquí? Contacte a su administrador para configurar su cuenta.
       </p>
     </form>

@@ -9,14 +9,16 @@ import { UserProfile } from '@/types/dashboard'
  * 
  * Structure:
  * - Top: Header with logo, search, notifications, user menu
- * - Left: Sidebar with navigation (collapsible on mobile)
+ * - Left: Collapsible sidebar with navigation
  * - Main: Content area
  * - Footer: Optional footer
  * 
  * Features:
+ * - Collapsible sidebar on desktop (toggle button)
  * - Responsive sidebar (drawer on mobile)
  * - Role-based navigation items
  * - Active link highlighting
+ * - Dark mode support
  */
 
 interface DashboardLayoutProps {
@@ -32,7 +34,8 @@ interface NavItem {
 }
 
 export default function DashboardLayout({ children, user }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Mobile sidebar
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Desktop sidebar
 
   const navigationItems: NavItem[] = [
     {
@@ -101,24 +104,65 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
   })
 
   return (
-    <div className="min-h-screen bg-clinical-light-bg">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 theme-transition">
       {/* Header */}
       <Header user={user} onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       <div className="flex">
-        {/* Sidebar - Desktop */}
-        <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 min-h-[calc(100vh-4rem)] sticky top-16">
+        {/* Sidebar - Desktop (Collapsible) */}
+        <aside 
+          className={`
+            hidden lg:block 
+            bg-white dark:bg-slate-800 
+            border-r border-gray-200 dark:border-slate-700 
+            min-h-[calc(100vh-4rem)] 
+            sticky top-16 
+            theme-transition
+            transition-all duration-300 ease-in-out
+            ${sidebarCollapsed ? 'w-20' : 'w-64'}
+          `}
+        >
+          {/* Collapse Toggle Button */}
+          <div className="flex justify-end p-2 border-b border-gray-200 dark:border-slate-700">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors text-gray-600 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400"
+              aria-label={sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+              title={sidebarCollapsed ? 'Expandir menú' : 'Colapsar menú'}
+            >
+              <svg 
+                className={`w-5 h-5 transition-transform duration-300 ${sidebarCollapsed ? 'rotate-180' : ''}`}
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Navigation */}
           <nav className="p-4 space-y-1">
             {filteredNavItems.map((item) => (
               <a
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition-colors group"
+                className={`
+                  flex items-center gap-3 px-4 py-3 rounded-lg 
+                  text-gray-700 dark:text-slate-300 
+                  hover:bg-brand-50 dark:hover:bg-brand-900/20 
+                  hover:text-brand-700 dark:hover:text-brand-400 
+                  transition-colors group
+                  ${sidebarCollapsed ? 'justify-center' : ''}
+                `}
+                title={sidebarCollapsed ? item.label : undefined}
               >
-                <span className="text-gray-500 group-hover:text-brand-600">
+                <span className="text-gray-500 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400 flex-shrink-0">
                   {item.icon}
                 </span>
-                <span className="font-medium">{item.label}</span>
+                {!sidebarCollapsed && (
+                  <span className="font-medium whitespace-nowrap">{item.label}</span>
+                )}
               </a>
             ))}
           </nav>
@@ -131,16 +175,18 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               className="fixed inset-0 bg-black/50 z-40 lg:hidden"
               onClick={() => setSidebarOpen(false)}
             />
-            <aside className="fixed top-16 left-0 bottom-0 w-64 bg-white border-r border-gray-200 z-50 lg:hidden overflow-y-auto">
+            <aside className="fixed top-16 left-0 bottom-0 w-64 bg-white dark:bg-slate-800 border-r border-gray-200 dark:border-slate-700 z-50 lg:hidden overflow-y-auto theme-transition">
               <nav className="p-4 space-y-1">
                 {filteredNavItems.map((item) => (
                   <a
                     key={item.href}
                     href={item.href}
-                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-brand-50 hover:text-brand-700 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 dark:text-slate-300 hover:bg-brand-50 dark:hover:bg-brand-900/20 hover:text-brand-700 dark:hover:text-brand-400 transition-colors group"
                     onClick={() => setSidebarOpen(false)}
                   >
-                    {item.icon}
+                    <span className="text-gray-500 dark:text-slate-400 group-hover:text-brand-600 dark:group-hover:text-brand-400">
+                      {item.icon}
+                    </span>
                     <span className="font-medium">{item.label}</span>
                   </a>
                 ))}
@@ -150,7 +196,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
         )}
 
         {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-900 theme-transition">
           {children}
         </main>
       </div>

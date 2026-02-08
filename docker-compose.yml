@@ -40,10 +40,11 @@ services:
     networks:
       - clinical_lab_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U postgres -d clinical_lab_db"]
+      interval: 5s
+      timeout: 3s
       retries: 5
+      start_period: 10s
 
   # Redis Cache
   # Used for session storage and caching
@@ -51,7 +52,7 @@ services:
     image: redis:7-alpine
     container_name: clinical_lab_redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: redis-server --appendonly yes --save 60 1000
     volumes:
       - redis_data:/data
     # NOTE: Port NOT exposed to host - only accessible via Docker network
@@ -59,9 +60,10 @@ services:
       - clinical_lab_network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
+      interval: 5s
+      timeout: 2s
       retries: 5
+      start_period: 5s
 
   # Django Backend API
   # REST API server for all business logic
@@ -69,6 +71,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+      target: runtime
     container_name: clinical_lab_backend
     restart: unless-stopped
     command: python manage.py runserver 0.0.0.0:8000
@@ -89,10 +92,10 @@ services:
       - clinical_lab_network
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/admin/ || exit 1"]
-      interval: 30s
-      timeout: 10s
+      interval: 20s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 30s
 
   # Next.js Frontend
   # React application for user interface
@@ -117,12 +120,14 @@ services:
       - clinical_lab_network
     environment:
       - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
-      interval: 30s
-      timeout: 10s
+      interval: 20s
+      timeout: 5s
       retries: 3
-      start_period: 40s
+      start_period: 30s
 
   # Nginx Reverse Proxy
   # Routes traffic to frontend/backend
@@ -146,9 +151,10 @@ services:
       - clinical_lab_network
     healthcheck:
       test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://localhost/ || exit 1"]
-      interval: 30s
-      timeout: 10s
+      interval: 20s
+      timeout: 5s
       retries: 3
+      start_period: 10s
 
 # Named Volumes
 # Persist data across container restarts

@@ -36,6 +36,13 @@ help:
 	@echo "  make logs-backend     - Show backend logs only"
 	@echo "  make logs-frontend    - Show frontend logs only"
 	@echo ""
+	@echo "Local Development (No Docker):"
+	@echo "  make local-setup      - Setup local development environment"
+	@echo "  make local-backend    - Run backend locally (Django dev server)"
+	@echo "  make local-frontend   - Run frontend locally (Next.js dev server)"
+	@echo "  make local-db         - Start only DB & Redis in Docker (for local dev)"
+	@echo "  make local-stop       - Stop local DB & Redis containers"
+	@echo ""
 	@echo "Database:"
 	@echo "  make migrate          - Run Django migrations"
 	@echo "  make makemigrations   - Create new Django migrations"
@@ -221,6 +228,176 @@ prod-up:
 prod-down:
 	@echo "Stopping production environment..."
 	docker compose -f docker compose.yml -f docker compose.prod.yml down
+
+# ==============================================================================
+# LOCAL DEVELOPMENT (Without Docker for better debugging)
+# ==============================================================================
+
+# Python venv paths
+VENV_DIR := backend/venv
+VENV_PYTHON := $(VENV_DIR)/bin/python3
+VENV_PIP := $(VENV_DIR)/bin/pip
+
+# Setup local development environment
+local-setup:
+	@echo "Setting up local development environment..."
+	@echo ""
+	@echo "1. Creating Python virtual environment..."
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		cd backend && python3 -m venv venv; \
+		echo "✓ Virtual environment created"; \
+	else \
+		echo "✓ Virtual environment already exists"; \
+	fi
+	@echo ""
+	@echo "2. Installing Python dependencies..."
+	$(VENV_PIP) install -r backend/requirements.txt
+	@echo ""
+	@echo "3. Installing Node.js dependencies..."
+	cd frontend && sudo npm install
+	@echo ""
+	@echo "4. Starting DB and Redis containers..."
+	$(DOCKER_COMPOSE) up -d db redis
+	@echo ""
+	@echo "Waiting for database to be ready..."
+	@sleep 5
+	@echo ""
+	@echo "5. Running migrations..."
+	cd backend && ../$(VENV_PYTHON) manage.py migrate
+	@echo ""
+	@echo "✓ Local setup complete!"
+	@echo ""
+	@echo "Virtual environment created at: $(VENV_DIR)"
+	@echo ""
+	@echo "Next steps:"
+	@echo "  1. Run 'make local-db' to start DB & Redis"
+	@echo "  2. Run 'make local-backend' in one terminal"
+	@echo "  3. Run 'make local-frontend' in another terminal"
+	@echo ""
+
+# Start only database and Redis for local development
+local-db:
+	@echo "Starting PostgreSQL and Redis containers..."
+	$(DOCKER_COMPOSE) up -d db redis
+	@echo ""
+	@echo "✓ Database and Redis are running:"
+	@echo "  PostgreSQL: localhost:5432"
+	@echo "  Redis:      localhost:6379"
+	@echo ""
+	@echo "Now you can run:"
+	@echo "  make local-backend   (in one terminal)"
+	@echo "  make local-frontend  (in another terminal)"
+
+# Stop local DB and Redis
+local-stop:
+	@echo "Stopping PostgreSQL and Redis..."
+	$(DOCKER_COMPOSE) stop db redis
+
+# Run Django backend locally
+local-backend:
+	@echo "Starting Django development server locally..."
+	@echo "=============================================="
+	@echo ""
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "⚠️  Virtual environment not found!"; \
+		echo "   Run 'make local-setup' first"; \
+		exit 1; \
+	fi
+	@if [ ! -f backend/.env.local ]; then \
+		echo "⚠️  Warning: backend/.env.local not found!"; \
+		echo "   Creating it from .env..."; \
+		cp backend/.env backend/.env.local; \
+		sed -i 's/DATABASE_HOST=db/DATABASE_HOST=localhost/g' backend/.env.local; \
+		sed -i 's/REDIS_HOST=redis/REDIS_HOST=localhost/g' backend/.env.local; \
+	fi
+	@echo "Backend will be available at:"
+	@echo "  http://localhost:8000"
+	@echo "  http://localhost:8000/admin"
+	@echo ""
+	@echo "Using virtual environment: $(VENV_DIR)"
+	@echo "Using .env.local for configuration"
+	@echo "Press Ctrl+C to stop"
+	@echo ""
+	@cd backend && cp .env.local .env && ../$(VENV_PYTHON) manage.py runserver 0.0.0.0:8000
+
+# Run Next.js frontend locally
+local-frontend:
+	@echo "Starting Next.js development server locally..."
+	@echo "==============================================="
+	@echo ""
+	@echo "Frontend will be available at:"
+	@echo "  http://localhost:3000"
+	@echo ""
+	@echo "Press Ctrl+C to stop"
+	@echo ""
+	cd frontend && sudo npm run dev
+
+# Quick command to run both backend and frontend locally
+# Note: This requires 'tmux' or you can run them in separate terminals
+local-dev:
+	@echo "To run local development:"
+	@echo ""
+	@echo "Terminal 1: make local-backend"
+	@echo "Terminal 2: make local-frontend"
+	@echo ""
+	@echo "Or use tmux/screen to run both together"
+
+# Install local Python dependencies (for backend)
+local-install-backend:
+	@echo "Installing Python dependencies locally..."
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "Creating virtual environment..."; \
+		cd backend && python3 -m venv venv; \
+	fi
+	$(VENV_PIP) install -r backend/requirements.txt
+	@echo "✓ Backend dependencies installed in virtual environment"
+
+# Install local Node dependencies (for frontend)
+local-install-frontend:
+	@echo "Installing Node.js dependencies locally..."
+	cd frontend && npm install
+	@echo "✓ Frontend dependencies installed"
+
+# Run backend migrations locally
+local-migrate:
+	@echo "Running migrations locally..."
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "⚠️  Virtual environment not found! Run 'make local-setup' first"; \
+		exit 1; \
+	fi
+	cd backend && ../$(VENV_PYTHON) manage.py migrate
+
+# Create superuser locally
+local-superuser:
+	@echo "Creating Django superuser locally..."
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "⚠️  Virtual environment not found! Run 'make local-setup' first"; \
+		exit 1; \
+	fi
+	cd backend && ../$(VENV_PYTHON) manage.py createsuperuser
+
+# Open Django shell locally
+local-shell:
+	@echo "Opening Django shell locally..."
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "⚠️  Virtual environment not found! Run 'make local-setup' first"; \
+		exit 1; \
+	fi
+	cd backend && ../$(VENV_PYTHON) manage.py shell
+
+# Run backend tests locally
+local-test-backend:
+	@echo "Running backend tests locally..."
+	@if [ ! -d "$(VENV_DIR)" ]; then \
+		echo "⚠️  Virtual environment not found! Run 'make local-setup' first"; \
+		exit 1; \
+	fi
+	cd backend && ../$(VENV_PYTHON) -m pytest -v
+
+# Run frontend tests locally
+local-test-frontend:
+	@echo "Running frontend tests locally..."
+	cd frontend && npm test
 
 # ==============================================================================
 # UTILITY COMMANDS

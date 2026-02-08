@@ -8,6 +8,7 @@ import { StatCardData } from '@/types/dashboard'
  * - Title and value
  * - Optional trend indicator
  * - Click action
+ * - Dark mode support
  * 
  * Used in dashboard grid to show key metrics
  */
@@ -19,28 +20,28 @@ interface StatsCardProps {
 
 const colorClasses = {
   green: {
-    bg: 'bg-brand-50',
-    icon: 'text-brand-600',
-    border: 'border-brand-200',
-    hover: 'hover:border-brand-400',
+    bg: 'bg-brand-50 dark:bg-brand-900/20',
+    icon: 'text-brand-600 dark:text-brand-400',
+    border: 'border-brand-200 dark:border-brand-800',
+    hover: 'hover:border-brand-400 dark:hover:border-brand-600',
   },
   blue: {
-    bg: 'bg-blue-50',
-    icon: 'text-blue-600',
-    border: 'border-blue-200',
-    hover: 'hover:border-blue-400',
+    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    icon: 'text-blue-600 dark:text-blue-400',
+    border: 'border-blue-200 dark:border-blue-800',
+    hover: 'hover:border-blue-400 dark:hover:border-blue-600',
   },
   purple: {
-    bg: 'bg-purple-50',
-    icon: 'text-purple-600',
-    border: 'border-purple-200',
-    hover: 'hover:border-purple-400',
+    bg: 'bg-purple-50 dark:bg-purple-900/20',
+    icon: 'text-purple-600 dark:text-purple-400',
+    border: 'border-purple-200 dark:border-purple-800',
+    hover: 'hover:border-purple-400 dark:hover:border-purple-600',
   },
   orange: {
-    bg: 'bg-orange-50',
-    icon: 'text-orange-600',
-    border: 'border-orange-200',
-    hover: 'hover:border-orange-400',
+    bg: 'bg-orange-50 dark:bg-orange-900/20',
+    icon: 'text-orange-600 dark:text-orange-400',
+    border: 'border-orange-200 dark:border-orange-800',
+    hover: 'hover:border-orange-400 dark:hover:border-orange-600',
   },
 }
 
@@ -51,8 +52,8 @@ export default function StatsCard({ data, onClick }: StatsCardProps) {
   return (
     <div
       className={`
-        bg-white rounded-xl border-2 ${colors.border} p-6
-        transition-all duration-300
+        bg-white dark:bg-slate-800 rounded-xl border-2 ${colors.border} p-6
+        transition-all duration-300 theme-transition
         ${isClickable ? `cursor-pointer ${colors.hover} card-hover` : ''}
       `}
       onClick={onClick}
@@ -67,7 +68,9 @@ export default function StatsCard({ data, onClick }: StatsCardProps) {
         
         {data.trend && (
           <div className={`flex items-center gap-1 text-sm font-semibold ${
-            data.trend.direction === 'up' ? 'text-green-600' : 'text-red-600'
+            data.trend.direction === 'up' 
+              ? 'text-green-600 dark:text-green-400' 
+              : 'text-red-600 dark:text-red-400'
           }`}>
             {data.trend.direction === 'up' ? (
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -85,18 +88,18 @@ export default function StatsCard({ data, onClick }: StatsCardProps) {
 
       {/* Value */}
       <div className="mb-1">
-        <h3 className="text-3xl font-bold text-gray-900">
+        <h3 className="text-3xl font-bold text-gray-900 dark:text-slate-100">
           {data.value}
         </h3>
       </div>
 
       {/* Title */}
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-gray-600">
+        <p className="text-sm font-medium text-gray-600 dark:text-slate-400">
           {data.title}
         </p>
         {data.trend && (
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-500 dark:text-slate-500">
             {data.trend.label}
           </span>
         )}

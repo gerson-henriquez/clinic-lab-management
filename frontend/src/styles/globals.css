@@ -5,48 +5,68 @@
 /**
  * Global Styles
  * 
- * This file contains global CSS that applies to the entire application.
- * - Tailwind CSS utility classes
- * - Custom CSS variables
- * - Global resets and defaults
- * - DiagnosticLab brand colors
+ * DiagnosticLab - Clinical Laboratory Management System
+ * Includes dark mode support and brand colors
  */
 
 :root {
-  /* DiagnosticLab Brand Colors */
+  /* DiagnosticLab Brand Colors (Light Mode) */
   --brand-primary: #00C853;
   --brand-primary-dark: #00843D;
   --brand-primary-light: #4CAF50;
-  --brand-secondary: #2C3E50;
-  --brand-light-bg: #F5F9F7;
+  --brand-secondary: #0891B2;
+  --brand-secondary-dark: #0E7490;
+  --brand-secondary-light: #06B6D4;
+  
+  /* Light Mode Colors */
+  --background: 255 255 255;
+  --foreground: 15 23 42;
+  --card: 248 250 252;
+  --card-foreground: 15 23 42;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --primary: 0 200 83;
+  --primary-foreground: 255 255 255;
+  --secondary: 8 145 178;
+  --secondary-foreground: 255 255 255;
+  --accent: 241 245 249;
+  --accent-foreground: 15 23 42;
+  --muted: 241 245 249;
+  --muted-foreground: 100 116 139;
   
   /* Semantic Colors */
   --success: #00C853;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-  
-  /* Neutral Colors */
-  --gray-50: #f9fafb;
-  --gray-100: #f3f4f6;
-  --gray-200: #e5e7eb;
-  --gray-300: #d1d5db;
-  --gray-600: #6b7280;
-  --gray-700: #374151;
-  --gray-800: #1f2937;
-  --gray-900: #111827;
-  
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #0EA5E9;
+}
+
+.dark {
+  /* Dark Mode Colors */
+  --background: 15 23 42;         /* Slate 900 */
+  --foreground: 241 245 249;      /* Slate 100 */
+  --card: 30 41 59;               /* Slate 800 */
+  --card-foreground: 241 245 249;
+  --border: 71 85 105;            /* Slate 600 */
+  --input: 51 65 85;              /* Slate 700 */
+  --primary: 76 175 80;           /* Lighter green for dark mode */
+  --primary-foreground: 15 23 42;
+  --secondary: 6 182 212;         /* Lighter teal for dark mode */
+  --secondary-foreground: 15 23 42;
+  --accent: 51 65 85;
+  --accent-foreground: 241 245 249;
+  --muted: 51 65 85;
+  --muted-foreground: 148 163 184;
 }
 
 * {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+}
+
+html {
+  @apply scroll-smooth;
 }
 
 html,
@@ -60,6 +80,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body {
+  @apply bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -67,59 +92,64 @@ a {
 
 /* Custom Utilities */
 @layer utilities {
+  /* Glass effect - different for light/dark */
   .glass-effect {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    @apply bg-white/70 dark:bg-slate-800/70 backdrop-blur-md border border-slate-200/50 dark:border-slate-700/50;
   }
   
+  /* Gradient text - adapts to theme */
   .gradient-text {
-    background: linear-gradient(135deg, #00C853 0%, #00843D 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-600 to-secondary-600 dark:from-brand-500 dark:to-secondary-500;
   }
   
+  /* Card hover effect */
   .card-hover {
-    transition: all 0.3s ease;
+    @apply transition-all duration-300 hover:shadow-lg hover:shadow-brand-600/10 dark:hover:shadow-brand-500/20 hover:-translate-y-1;
   }
   
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-  }
-  
+  /* Floating animation */
   .animate-float {
     animation: float 6s ease-in-out infinite;
   }
   
-  @keyframes float {
-    0%, 100% {
-      transform: translateY(0) translateX(0);
-    }
-    25% {
-      transform: translateY(-20px) translateX(10px);
-    }
-    50% {
-      transform: translateY(-10px) translateX(-10px);
-    }
-    75% {
-      transform: translateY(-15px) translateX(5px);
-    }
+  /* Smooth theme transitions */
+  .theme-transition {
+    @apply transition-colors duration-300 ease-in-out;
   }
 }
 
 /* Focus styles for accessibility */
 @layer base {
   *:focus-visible {
-    outline: 2px solid var(--brand-primary);
-    outline-offset: 2px;
+    @apply outline-none ring-2 ring-brand-600 dark:ring-brand-500 ring-offset-2 ring-offset-white dark:ring-offset-slate-900;
   }
   
-  button:focus-visible,
-  a:focus-visible,
-  input:focus-visible {
-    outline: 2px solid var(--brand-primary);
-    outline-offset: 2px;
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100 dark:bg-slate-800;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full hover:bg-slate-400 dark:hover:bg-slate-500;
+  }
+}
+
+/* Animations */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0) translateX(0);
+  }
+  25% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  50% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+  75% {
+    transform: translateY(-15px) translateX(5px);
   }
 }

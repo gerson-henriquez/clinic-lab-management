@@ -1,5 +1,7 @@
 import type { AppProps } from 'next/app'
 import '@/styles/globals.css'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import { useEffect, useState } from 'react'
 
 /**
  * Custom App Component
@@ -7,7 +9,7 @@ import '@/styles/globals.css'
  * This is the root component that wraps all pages in the Next.js application.
  * 
  * Purpose:
- * - Add global providers (AuthContext, NotificationContext)
+ * - Add global providers (ThemeProvider, AuthContext, NotificationContext)
  * - Include global CSS
  * - Persist layout between page changes
  * - Add custom error handling
@@ -20,10 +22,27 @@ import '@/styles/globals.css'
  */
 
 export default function App({ Component, pageProps }: AppProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Prevent flash of unstyled content
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
+        <div className="animate-pulse">
+          <div className="w-16 h-16 bg-brand-600 rounded-full"></div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <>
-      {/* TODO: Add AuthProvider, NotificationProvider here */}
+    <ThemeProvider>
+      {/* TODO Phase 2: Add AuthProvider, NotificationProvider here */}
       <Component {...pageProps} />
-    </>
+    </ThemeProvider>
   )
 }

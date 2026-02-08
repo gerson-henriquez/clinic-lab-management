@@ -1,16 +1,27 @@
+# Python cache and compiled files
 __pycache__
 *.pyc
 *.pyo
 *.pyd
 .Python
+*.so
+
+# Virtual environments
 env/
 venv/
 ENV/
+.venv
 *.env
 .env
-.venv
+.env.local
+.env.*.local
+
+# Package management
 pip-log.txt
 pip-delete-this-directory.txt
+.pip_download_cache
+
+# Testing and coverage
 .tox/
 .coverage
 .coverage.*
@@ -18,23 +29,70 @@ pip-delete-this-directory.txt
 nosetests.xml
 coverage.xml
 *.cover
-*.log
-.git
-.gitignore
-.mypy_cache
+htmlcov/
 .pytest_cache
 .hypothesis
+
+# Logs
+*.log
+*.log.*
+
+# Database files
 *.db
 *.sqlite3
 db.sqlite3
+*.sql
+
+# Django stuff
 media/
 staticfiles/
-*.pdf
-*.zip
-*.tar.gz
+/static/
+local_settings.py
+
+# IDEs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+
+# Documentation
+*.md
+docs/
+*.rst
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# Archives
+*.pdf
+*.zip
+*.tar.gz
+*.tar
+*.gz
+
+# Temporary files
+*.tmp
+*.bak
+*.old
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini

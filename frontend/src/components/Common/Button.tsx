@@ -3,7 +3,7 @@ import { ButtonHTMLAttributes, ReactNode } from 'react'
 /**
  * Button Component
  * 
- * Reusable button with multiple variants and sizes
+ * Reusable button with multiple variants, sizes, and dark mode support
  * 
  * Props:
  * - variant: 'primary' | 'secondary' | 'outline' | 'ghost' (default: 'primary')
@@ -11,6 +11,8 @@ import { ButtonHTMLAttributes, ReactNode } from 'react'
  * - loading: boolean - Shows loading spinner
  * - fullWidth: boolean - Makes button full width
  * - children: Button content
+ * 
+ * Note: Supports dark mode with complementary colors
  * 
  * Usage:
  * <Button variant="primary" onClick={handleClick}>
@@ -27,10 +29,43 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses = {
-  primary: 'bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800 focus:ring-brand-500',
-  secondary: 'bg-gray-600 text-white hover:bg-gray-700 active:bg-gray-800 focus:ring-gray-500',
-  outline: 'bg-transparent border-2 border-brand-600 text-brand-600 hover:bg-brand-50 active:bg-brand-100 focus:ring-brand-500',
-  ghost: 'bg-transparent text-brand-600 hover:bg-brand-50 active:bg-brand-100 focus:ring-brand-500',
+  primary: `
+    bg-gradient-to-r from-brand-600 to-brand-700 
+    dark:from-brand-500 dark:to-brand-600
+    text-white 
+    hover:from-brand-700 hover:to-brand-800 
+    dark:hover:from-brand-600 dark:hover:to-brand-700
+    shadow-md hover:shadow-lg 
+    hover:shadow-brand-600/30 dark:hover:shadow-brand-500/30
+    active:scale-[0.98]
+    focus:ring-brand-500 dark:focus:ring-brand-400
+  `,
+  secondary: `
+    bg-gradient-to-r from-secondary-600 to-secondary-700
+    dark:from-secondary-500 dark:to-secondary-600
+    text-white
+    hover:from-secondary-700 hover:to-secondary-800
+    dark:hover:from-secondary-600 dark:hover:to-secondary-700
+    shadow-md hover:shadow-lg
+    hover:shadow-secondary-600/30 dark:hover:shadow-secondary-500/30
+    active:scale-[0.98]
+    focus:ring-secondary-500 dark:focus:ring-secondary-400
+  `,
+  outline: `
+    bg-transparent 
+    border-2 border-brand-600 dark:border-brand-500
+    text-brand-600 dark:text-brand-400
+    hover:bg-brand-50 dark:hover:bg-brand-900/20
+    active:scale-[0.98]
+    focus:ring-brand-500 dark:focus:ring-brand-400
+  `,
+  ghost: `
+    bg-transparent 
+    text-gray-700 dark:text-slate-300
+    hover:bg-gray-100 dark:hover:bg-slate-800
+    active:scale-[0.98]
+    focus:ring-gray-500 dark:focus:ring-slate-400
+  `,
 }
 
 const sizeClasses = {
@@ -49,7 +84,7 @@ export default function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseClasses = 'font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
+  const baseClasses = 'font-semibold rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-slate-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2'
   
   const widthClass = fullWidth ? 'w-full' : ''
   
