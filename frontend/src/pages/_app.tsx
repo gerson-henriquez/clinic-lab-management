@@ -4,23 +4,9 @@ import { ThemeProvider } from '@/components/ThemeProvider'
 import { useEffect, useState } from 'react'
 
 /**
- * Custom App Component
- * 
- * This is the root component that wraps all pages in the Next.js application.
- * 
- * Purpose:
- * - Add global providers (ThemeProvider, AuthContext, NotificationContext)
- * - Include global CSS
- * - Persist layout between page changes
- * - Add custom error handling
- * 
- * For teams new to Next.js:
- * - This file runs on every page
- * - Use it for app-wide state and configuration
- * - Component prop contains the active page component
- * - pageProps contains data fetched by getServerSideProps or getStaticProps
+ * Custom App Component – Neumorphic Precision
+ * Root wrapper with theme provider and loading state
  */
-
 export default function App({ Component, pageProps }: AppProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -31,9 +17,11 @@ export default function App({ Component, pageProps }: AppProps) {
   // Prevent flash of unstyled content
   if (!mounted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-900">
-        <div className="animate-pulse">
-          <div className="w-16 h-16 bg-brand-600 rounded-full"></div>
+      <div className="min-h-screen flex items-center justify-center bg-surface-200 dark:bg-surface-900">
+        <div className="flex flex-col items-center gap-4 animate-pulse">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500
+                         shadow-glow-emerald" />
+          <div className="w-24 h-1 bg-surface-300 dark:bg-surface-700 rounded-full" />
         </div>
       </div>
     )

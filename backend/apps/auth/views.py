@@ -2,6 +2,8 @@
 Authentication Views
 Handles user authentication, token management, and password operations
 """
+import logging
+
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,7 +11,6 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
 from django_ratelimit.decorators import ratelimit
-from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_protect
 from django.utils import timezone
 from datetime import timedelta
@@ -24,6 +25,8 @@ from .serializers import (
     LoginResponseSerializer,
     TokenRefreshResponseSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def get_client_ip(request):
@@ -259,6 +262,7 @@ def logout_view(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     except Exception as e:
+        logger.exception('Unexpected error during logout for user %s', request.user.id)
         return Response(
             {'error': 'Error al cerrar sesión.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -348,6 +352,7 @@ def refresh_token_view(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
     except Exception as e:
+        logger.exception('Unexpected error during token refresh')
         return Response(
             {'error': 'Error al actualizar el token.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -406,6 +411,7 @@ def current_user_view(request):
 )
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@ratelimit(key='user', rate='5/m', method='POST', block=True)
 @csrf_protect
 def change_password_view(request):
     """
@@ -490,17 +496,27 @@ def user_permissions_view(request):
         is_superadmin = role == 'superadmin'
         
         if is_superadmin:
-            # Superadmin has all permissions
             from .models import Permission
-            all_permissions = Permission.objects.all()
-            permission_codes = [p.code for p in all_permissions]
+            from django.core.cache import cache
+            cache_key = 'all_permission_codes'
+            permission_codes = cache.get(cache_key)
+            if permission_codes is None:
+                permission_codes = list(
+                    Permission.objects.values_list('code', flat=True)
+                )
+                cache.set(cache_key, permission_codes, 300)  # 5 min cache
         else:
-            # Get role-specific permissions
             from .models import RolePermission
-            role_permissions = RolePermission.objects.filter(
-                role=role
-            ).select_related('permission')
-            permission_codes = [rp.permission.code for rp in role_permissions]
+            from django.core.cache import cache
+            cache_key = f'role_permissions_{role}'
+            permission_codes = cache.get(cache_key)
+            if permission_codes is None:
+                permission_codes = list(
+                    RolePermission.objects.filter(role=role)
+                    .select_related('permission')
+                    .values_list('permission__code', flat=True)
+                )
+                cache.set(cache_key, permission_codes, 300)  # 5 min cache
         
         data = {
             'role': role,
@@ -512,6 +528,7 @@ def user_permissions_view(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
     
     except Exception as e:
+        logger.exception('Error fetching permissions for user %s', user.id)
         return Response(
             {'error': 'Error al obtener permisos del usuario.'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR

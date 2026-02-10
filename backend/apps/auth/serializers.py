@@ -70,9 +70,9 @@ class LoginSerializer(serializers.Serializer):
                 code='required'
             )
 
-        # Check if user exists
+        # Check if user exists (prefetch profile + branch to avoid N+1)
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.select_related('profile__branch').get(email=email)
         except User.DoesNotExist:
             raise serializers.ValidationError(
                 'Email o contraseña incorrectos.',

@@ -214,6 +214,278 @@ The application supports five distinct user roles:
 4. **FINANCE_USER** - Views financial data and reports
 5. **MANAGER** - Manages staff, branches, and has all technician permissions
 
+# User Management Quick Reference
+
+## 🔄 Reset User Password
+
+### Method 1: Django Shell (Fastest)
+```bash
+cd backend && source venv/bin/activate
+python manage.py shell
+```
+
+```python
+from apps.auth.models import User
+
+user = User.objects.get(email='admin@lab.com')
+user.set_password('yournewpassword123')
+user.save()
+print(f"✅ Password reset for {user.email}")
+```
+
+### Method 2: Django Command
+```bash
+python manage.py changepassword admin@lab.com
+```
+
+### Method 3: Via Admin Interface
+1. Go to http://localhost:8000/admin
+2. Click "Users"
+3. Click on the user
+4. Click "Change password" button
+5. Enter new password twice
+6. Save
+
+---
+
+## 🗑️ Clean Everything and Start Over
+
+### Option A: Reset All Users (Keep Branches)
+```bash
+cd backend && source venv/bin/activate
+python manage.py reset_users --keep-branches
+```
+
+This will delete:
+- ✅ All users
+- ✅ All user profiles
+- ✅ All audit logs
+- ❌ Keep branches
+
+### Option B: Reset Everything (Including Branches)
+```bash
+python manage.py reset_users
+```
+
+This will delete:
+- ✅ All users
+- ✅ All user profiles
+- ✅ All audit logs
+- ✅ All branches
+
+**⚠️ You will be prompted to confirm!**
+
+To skip confirmation:
+```bash
+python manage.py reset_users --confirm
+```
+
+---
+
+## 🚀 Quick Setup (After Reset)
+
+### Method 1: One-Command Setup
+```bash
+python manage.py quick_setup
+```
+
+This will:
+1. Ask for email, username, password
+2. Create default branch (if not exists)
+3. Create superuser
+4. Create profile automatically
+5. Everything ready to login!
+
+### Method 2: Step-by-Step Setup
+
+**Step 1: Create User**
+```bash
+python manage.py create_user
+```
+Follow the prompts to select role, etc.
+
+**Step 2: Login**
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "your@email.com",
+    "password": "yourpassword"
+  }'
+```
+
+---
+
+## 📋 Check Current Users
+
+### List All Users
+```bash
+python manage.py shell
+```
+
+```python
+from apps.auth.models import User, UserProfile
+
+print("\n=== All Users ===")
+for user in User.objects.all():
+    try:
+        profile = user.profile
+        print(f"{user.email} - {profile.role} - {profile.branch.name}")
+    except:
+        print(f"{user.email} - NO PROFILE!")
+```
+
+### Count Users
+```bash
+python manage.py shell -c "from apps.auth.models import User; print(f'Total users: {User.objects.count()}')"
+```
+
+---
+
+## 🔧 Fix Existing User (Add Missing Profile)
+
+If you have a user without a profile:
+
+```bash
+python manage.py shell
+```
+
+```python
+from apps.auth.models import User, UserProfile
+from apps.branches.models import Branch
+
+# Get user without profile
+user = User.objects.get(email='user@example.com')
+
+# Get or create branch
+branch, _ = Branch.objects.get_or_create(
+    code='MAIN',
+    defaults={
+        'name': 'Main Branch',
+        'address': '123 Main St',
+        'phone': '+1234567890',
+        'email': 'main@lab.com'
+    }
+)
+
+# Create profile
+profile = UserProfile.objects.create(
+    user=user,
+    role='doctor',  # Choose: superadmin, doctor, lab_technician, finance_user, manager
+    branch=branch,
+    phone=''
+)
+
+print(f"✅ Profile created for {user.email}")
+```
+
+---
+
+## 🎯 Common Scenarios
+
+### Scenario 1: "I forgot my admin password"
+```bash
+cd backend && source venv/bin/activate
+python manage.py changepassword admin@lab.com
+```
+
+### Scenario 2: "I want to start fresh with clean database"
+```bash
+# Delete everything
+python manage.py reset_users
+
+# Create new admin
+python manage.py quick_setup
+```
+
+### Scenario 3: "I created user with createsuperuser but can't login"
+```bash
+# Fix by adding profile
+python manage.py shell
+```
+
+```python
+from apps.auth.models import User, UserProfile
+from apps.branches.models import Branch
+
+user = User.objects.get(email='admin@lab.com')
+branch = Branch.objects.first() or Branch.objects.create(
+    code='MAIN', name='Main Branch', 
+    address='123 Main St', phone='+1234567890', 
+    email='main@lab.com'
+)
+
+UserProfile.objects.create(
+    user=user, role='superadmin', branch=branch
+)
+```
+
+### Scenario 4: "I need multiple users for testing"
+```bash
+# Create first user
+python manage.py create_user \
+  --email doctor@lab.com \
+  --username doctor \
+  --password test123 \
+  --role doctor
+
+# Create second user
+python manage.py create_user \
+  --email tech@lab.com \
+  --username technician \
+  --password test123 \
+  --role lab_technician
+```
+
+---
+
+## ⚡ Quick Commands Reference
+
+```bash
+# Reset password
+python manage.py changepassword EMAIL
+
+# Create user with profile
+python manage.py create_user
+
+# Quick setup (recommended after reset)
+python manage.py quick_setup
+
+# Reset users (keep branches)
+python manage.py reset_users --keep-branches
+
+# Reset everything
+python manage.py reset_users
+
+# List users
+python manage.py shell -c "from apps.auth.models import User; [print(u.email) for u in User.objects.all()]"
+
+# Count users
+python manage.py shell -c "from apps.auth.models import User; print(User.objects.count())"
+```
+
+---
+
+## 🔐 Security Notes
+
+- Always use strong passwords in production
+- The `reset_users` command requires confirmation to prevent accidents
+- Audit logs are deleted with users (for GDPR compliance scenarios)
+- Superadmins have access to all permissions and branches
+- Regular users can only access their assigned branch
+
+---
+
+## 📝 File Locations
+
+- User model: `backend/apps/auth/models.py`
+- Management commands: `backend/apps/auth/management/commands/`
+- Admin interface: http://localhost:8000/admin
+
+---
+
+
+
 See [plan.md](plan.md) for detailed permission matrix.
 
 ## 🔒 Security

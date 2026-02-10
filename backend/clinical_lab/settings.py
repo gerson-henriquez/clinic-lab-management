@@ -29,8 +29,13 @@ environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = env('SECRET_KEY', default='django-insecure-dev-key-change-in-production')
 
-# SECURITY WARNING: don't run with debug turned on in production!
+# Fail fast if insecure key is used outside development
 DEBUG = env('DEBUG')
+if not DEBUG and 'insecure' in SECRET_KEY:
+    raise ValueError(
+        'SECRET_KEY contains "insecure" but DEBUG is False. '
+        'Set a strong SECRET_KEY in your environment for production.'
+    )
 
 # Allowed hosts for the application
 # In development: localhost, 127.0.0.1

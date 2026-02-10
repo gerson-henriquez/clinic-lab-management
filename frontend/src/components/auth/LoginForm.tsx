@@ -1,161 +1,158 @@
-import { useState } from 'react'
-import { useRouter } from 'next/router'
-import Input from '../Common/Input'
-import Button from '../Common/Button'
-
 /**
- * LoginForm Component
- * 
- * Handles user authentication with email/username and password
- * 
- * Features:
- * - Form validation
- * - Loading states
- * - Error handling
- * - Remember me checkbox
- * - Forgot password link
- * 
- * Note: UI text in Spanish, code/comments in English
- * For Phase 2: Will integrate with backend authentication API
+ * LoginForm – Neumorphic Console Input
+ * Authentication form with tactile glass aesthetic
  */
+import { useState, FormEvent } from 'react'
+import Input from '@/components/Common/Input'
+import Button from '@/components/Common/Button'
+
+interface FormData {
+  username: string
+  password: string
+  rememberMe: boolean
+}
 
 export default function LoginForm() {
-  const router = useRouter()
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     username: '',
     password: '',
     rememberMe: false,
   })
-  const [errors, setErrors] = useState<{username?: string; password?: string}>({})
+  const [errors, setErrors] = useState<{ username?: string; password?: string }>({})
   const [loading, setLoading] = useState(false)
-  const [loginError, setLoginError] = useState('')
+  const [loginError, setLoginError] = useState<string | null>(null)
 
-  const validateForm = () => {
-    const newErrors: {username?: string; password?: string} = {}
-    
-    if (!formData.username) {
-      newErrors.username = 'El usuario o correo es requerido'
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+    if (errors[name as keyof typeof errors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }))
     }
-    
-    if (!formData.password) {
-      newErrors.password = 'La contraseña es requerida'
-    } else if (formData.password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
-    }
-    
+    setLoginError(null)
+  }
+
+  const validate = (): boolean => {
+    const newErrors: typeof errors = {}
+    if (!formData.username.trim()) newErrors.username = 'El email es requerido'
+    if (!formData.password) newErrors.password = 'La contraseña es requerida'
+    else if (formData.password.length < 6) newErrors.password = 'Mínimo 6 caracteres'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setLoginError('')
-    
-    if (!validateForm()) {
-      return
-    }
-    
+    if (!validate()) return
     setLoading(true)
-    
-    // TODO Phase 2: Replace with actual API call
-    // Simulating API call
-    setTimeout(() => {
-      // For now, just redirect to dashboard
-      router.push('/dashboard')
-    }, 1500)
-    
-    // Example of what Phase 2 will look like:
-    // try {
-    //   const response = await fetch('/api/auth/login', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify(formData),
-    //   })
-    //   if (response.ok) {
-    //     router.push('/dashboard')
-    //   } else {
-    //     setLoginError('Credenciales inválidas')
-    //   }
-    // } catch (error) {
-    //   setLoginError('Error de red. Por favor intente nuevamente.')
-    // } finally {
-    //   setLoading(false)
-    // }
+    setLoginError(null)
+    try {
+      // TODO: Phase 2 – Real API integration
+      await new Promise(resolve => setTimeout(resolve, 1500))
+      window.location.href = '/dashboard'
+    } catch {
+      setLoginError('Email o contraseña incorrectos')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div>
-        <Input
-          label="Usuario o Correo"
-          type="text"
-          placeholder="Ingrese su usuario o correo"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          error={errors.username}
-          required
-          autoComplete="username"
-        />
+    <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-6">
+      {/* ── Header ── */}
+      <div className="mb-2">
+        <h2 className="text-2xl font-bold text-surface-800 dark:text-surface-100">
+          Iniciar Sesión
+        </h2>
+        <p className="text-surface-500 dark:text-surface-400 text-sm mt-1">
+          Ingrese sus credenciales para acceder al sistema
+        </p>
       </div>
 
-      <div>
-        <Input
-          label="Contraseña"
-          type="password"
-          placeholder="Ingrese su contraseña"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          error={errors.password}
-          required
-          autoComplete="current-password"
-        />
-      </div>
-
-      <div className="flex items-center justify-between">
-        <label className="flex items-center gap-2 cursor-pointer group">
-          <input
-            type="checkbox"
-            checked={formData.rememberMe}
-            onChange={(e) => setFormData({ ...formData, rememberMe: e.target.checked })}
-            className="w-4 h-4 text-brand-600 dark:text-brand-500 bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 rounded focus:ring-brand-500 dark:focus:ring-brand-400 focus:ring-2 transition-all"
-          />
-          <span className="text-sm text-gray-700 dark:text-slate-300 group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
-            Recordarme
-          </span>
-        </label>
-
-        <a
-          href="#"
-          className="text-sm font-medium text-brand-600 dark:text-brand-400 hover:text-brand-700 dark:hover:text-brand-300 transition-colors underline-offset-4 hover:underline"
-          onClick={(e) => {
-            e.preventDefault()
-            // TODO Phase 2: Implement forgot password flow
-            alert('Funcionalidad de recuperación de contraseña disponible en Fase 2')
-          }}
-        >
-          ¿Olvidó su contraseña?
-        </a>
-      </div>
-
+      {/* ── Error Banner ── */}
       {loginError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400">{loginError}</p>
+        <div className="neu-pressed p-4 flex items-center gap-3 animate-fade-in">
+          <div className="glow-dot glow-dot-rose flex-shrink-0" />
+          <p className="text-sm text-rose-600 dark:text-rose-400">{loginError}</p>
         </div>
       )}
 
-      <Button
-        type="submit"
-        variant="primary"
-        size="lg"
-        fullWidth
-        loading={loading}
-      >
-        {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+      {/* ── Fields ── */}
+      <div className="space-y-5">
+        <Input
+          label="Email"
+          name="username"
+          type="email"
+          placeholder="usuario@diagnosticlab.com"
+          value={formData.username}
+          onChange={handleChange}
+          error={errors.username}
+          autoComplete="email"
+          required
+        />
+        <Input
+          label="Contraseña"
+          name="password"
+          type="password"
+          placeholder="••••••••"
+          value={formData.password}
+          onChange={handleChange}
+          error={errors.password}
+          autoComplete="current-password"
+          required
+        />
+      </div>
+
+      {/* ── Remember & Forgot ── */}
+      <div className="flex items-center justify-between">
+        <label className="flex items-center gap-2.5 cursor-pointer group">
+          <div className="relative">
+            <input
+              type="checkbox"
+              name="rememberMe"
+              checked={formData.rememberMe}
+              onChange={handleChange}
+              className="sr-only peer"
+            />
+            <div className="w-5 h-5 rounded-md neu-pressed peer-checked:bg-emerald-500
+                           peer-checked:shadow-glow-emerald transition-all duration-200
+                           flex items-center justify-center">
+              {formData.rememberMe && (
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24"
+                     stroke="currentColor" strokeWidth={3}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+            </div>
+          </div>
+          <span className="text-sm text-surface-600 dark:text-surface-400 group-hover:text-surface-800 dark:group-hover:text-surface-200 transition-colors">
+            Recordar sesión
+          </span>
+        </label>
+
+        <button type="button"
+                className="text-sm text-emerald-600 dark:text-emerald-400 hover:text-emerald-700
+                          dark:hover:text-emerald-300 transition-colors font-medium">
+          ¿Olvidó su contraseña?
+        </button>
+      </div>
+
+      {/* ── Submit ── */}
+      <Button type="submit" variant="primary" fullWidth loading={loading}>
+        {loading ? 'Autenticando...' : 'Acceder al Sistema'}
       </Button>
 
-      <p className="text-center text-sm text-gray-600 dark:text-slate-400 mt-4">
-        ¿Primera vez aquí? Contacte a su administrador para configurar su cuenta.
-      </p>
+      {/* ── Secure Badge ── */}
+      <div className="flex items-center justify-center gap-2 pt-2">
+        <svg className="w-3.5 h-3.5 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
+        </svg>
+        <span className="text-mono text-[10px] tracking-wider text-surface-400 uppercase">
+          Conexión Encriptada · TLS 1.3
+        </span>
+      </div>
     </form>
   )
 }

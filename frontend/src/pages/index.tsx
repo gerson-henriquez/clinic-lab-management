@@ -1,91 +1,72 @@
-import type { NextPage } from 'next'
+/**
+ * Login Page – DiagnosticLab Tactical Console
+ * Split-screen: Console brand panel + Glass login form
+ */
 import Head from 'next/head'
-import LoginForm from '@/components/auth/LoginForm'
+import Image from 'next/image'
 import LoginHero from '@/components/auth/LoginHero'
-import Logo from '@/components/Common/Logo'
+import LoginForm from '@/components/auth/LoginForm'
 import ThemeToggle from '@/components/ThemeToggle'
 
-/**
- * Login Page
- * 
- * Main entry point for the application
- * Features a split-screen layout:
- * - Left: Brand hero section with features (desktop only)
- * - Right: Login form
- * 
- * Design: Clinical Modern concept with DiagnosticLab brand colors
- * Responsive: Stacks vertically on mobile, side-by-side on desktop
- * 
- * Note: UI text in Spanish, code/comments in English
- * 
- * Phase 2 TODO:
- * - Integrate with Django authentication API
- * - Add session management
- * - Implement "Remember me" functionality
- * - Add password reset flow
- */
-
-const LoginPage: NextPage = () => {
+export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>DiagnosticLab - Login</title>
-        <meta name="description" content="Inicie sesión en DiagnosticLab - Sistema de Gestión de Laboratorio Clínico" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <link rel="icon" type="image/png" href="/images/logo_icon.png" />
+        <title>DiagnosticLab · Iniciar Sesión</title>
+        <meta name="description" content="Sistema de gestión de laboratorio clínico" />
       </Head>
 
-      <div className="min-h-screen flex relative">
-        {/* Theme Toggle - Absolute positioned */}
-        <div className="absolute top-4 right-4 z-50">
-          <ThemeToggle />
+      <div className="min-h-screen flex">
+        {/* Left: Console Brand Panel */}
+        <div className="hidden md:flex md:w-[45%] lg:w-[42%]">
+          <LoginHero />
         </div>
 
-        {/* Left Panel - Brand Hero (Hidden on mobile) */}
-        <LoginHero />
+        {/* Right: Glass Login Panel */}
+        <div className="flex-1 relative flex flex-col items-center justify-center
+                       bg-surface-200 dark:bg-surface-900 px-6 py-10">
 
-        {/* Right Panel - Login Form */}
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-slate-50 dark:bg-slate-900 theme-transition">
-          <div className="w-full max-w-md">
-            {/* Mobile Logo (Shown only on small screens) */}
-            <div className="md:hidden mb-8 text-center">
-              <Logo size="lg" className="justify-center mb-4" />
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">
-                Bienvenido de Nuevo
-              </h1>
-              <p className="text-gray-600 dark:text-slate-400 mt-2">
-                Inicie sesión para acceder a su panel
-              </p>
+          {/* Mesh grid background */}
+          <div className="absolute inset-0 pointer-events-none"
+               style={{
+                 backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(148,163,184,0.08) 1px, transparent 0)',
+                 backgroundSize: '24px 24px'
+               }} />
+
+          {/* Ambient glow */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/3 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-cyan-500/5 dark:bg-cyan-500/3 rounded-full blur-3xl" />
+
+          {/* Theme Toggle */}
+          <div className="absolute top-5 right-5 z-20">
+            <ThemeToggle />
+          </div>
+
+          {/* Mobile Logo */}
+          <div className="md:hidden mb-8 flex flex-col items-center">
+            <div className="relative w-20 h-20 mb-3">
+              <Image src="/images/logo_icon.png" alt="DiagnosticLab" fill className="object-contain" priority />
             </div>
+            <h1 className="text-2xl font-bold text-surface-800 dark:text-surface-100">
+              Diagnostic<span className="text-emerald-500">Lab</span>
+            </h1>
+          </div>
 
-            {/* Login Card with enhanced styling */}
-            <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl dark:shadow-slate-950/50 p-8 sm:p-10 animate-fade-in border border-slate-200 dark:border-slate-700">
-              {/* Desktop Header */}
-              <div className="hidden md:block mb-8">
-                <h2 className="text-3xl font-bold text-gray-900 dark:text-slate-100 mb-2 text-center gradient-text">
-                  Iniciar Sesión
-                </h2>
-                <p className="text-gray-600 dark:text-slate-400">
-                  Ingrese sus credenciales para acceder a su cuenta
-                </p>
-              </div>
+          {/* Glass Card */}
+          <div className="relative z-10 w-full max-w-md glass-panel-solid p-8 sm:p-10
+                         animate-fade-in shadow-glass-lg">
+            <LoginForm />
+          </div>
 
-              {/* Login Form */}
-              <LoginForm />
-            </div>
-
-            {/* Additional Info */}
-            <div className="mt-6 text-center text-sm text-gray-600 dark:text-slate-400">
-              <p>¿Tiene problemas para iniciar sesión?</p>
-              <p className="mt-1">
-                Contacte a su administrador de sistema o soporte técnico
-              </p>
-            </div>
+          {/* Bottom Status */}
+          <div className="relative z-10 mt-8 flex items-center gap-3 text-surface-400 text-mono text-[11px]">
+            <div className="glow-dot glow-dot-emerald" style={{ animationDuration: '5s' }} />
+            <span>Sistema Operativo</span>
+            <span className="text-surface-300 dark:text-surface-600">&middot;</span>
+            <span>v1.0.0</span>
           </div>
         </div>
       </div>
     </>
   )
 }
-
-export default LoginPage
