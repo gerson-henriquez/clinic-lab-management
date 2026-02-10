@@ -88,7 +88,7 @@ class UserAdmin(BaseUserAdmin):
         """Get user role from profile"""
         try:
             return obj.profile.role
-        except:
+        except (AttributeError, UserProfile.DoesNotExist):
             return '-'
     get_role.short_description = 'Role'
     

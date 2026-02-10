@@ -2,11 +2,12 @@
  * DashboardLayout – DiagnosticLab Tactical Console
  * Floating rounded sidebar + glass workspace
  */
-import { ReactNode, useState } from 'react'
+import { ReactNode, useState, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/router'
 import Link from 'next/link'
 import Image from 'next/image'
 import Header from '@/components/Common/Header'
+import { CloseIcon, ExternalLinkIcon } from '@/components/Common/Icons'
 import { UserProfile } from '@/types/user'
 
 interface DashboardLayoutProps {
@@ -81,46 +82,64 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
-  const isActive = (href: string) => router.pathname === href
+  const closeSidebar = useCallback(() => setSidebarOpen(false), [])
+  const toggleSidebar = useCallback(() => setSidebarOpen(prev => !prev), [])
+
+  /** Memoize active-route check so it only recomputes on pathname change */
+  const currentPath = router.pathname
+  const isActive = useMemo(() => (href: string) => currentPath === href, [currentPath])
 
   return (
-    <div className="min-h-screen bg-surface-200 dark:bg-surface-900 p-3 md:p-4 flex gap-4">
+    <div className="min-h-screen bg-surface-200 dark:bg-surface-900 p-2 sm:p-3 md:p-4 flex gap-4">
 
       {/* ══════════ Mobile Overlay ══════════ */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-surface-900/50 backdrop-blur-sm lg:hidden"
-             onClick={() => setSidebarOpen(false)} />
+             onClick={closeSidebar}
+             aria-hidden="true" />
       )}
 
       {/* ══════════ Floating Sidebar ══════════ */}
-      <aside className={`
-        fixed lg:sticky top-0 left-0 z-50 h-screen lg:h-auto lg:self-start
-        w-[220px] flex flex-col
-        bg-white dark:bg-surface-800
-        lg:rounded-2xl
-        shadow-neu-flat dark:shadow-neu-dark-flat
-        transition-transform duration-300 ease-out
-        lg:translate-x-0 lg:my-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}
-        style={{ position: 'sticky', top: '1rem' }}
+      <aside
+        className={`
+          fixed top-0 left-0 z-50 h-screen
+          lg:sticky lg:top-4 lg:h-auto lg:self-start
+          w-[260px] lg:w-[220px] flex flex-col
+          bg-white dark:bg-surface-800
+          rounded-r-2xl lg:rounded-2xl
+          shadow-neu-flat dark:shadow-neu-dark-flat
+          transition-transform duration-300 ease-out
+          lg:translate-x-0
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+        `}
+        aria-label="Navegación principal"
       >
-        {/* ── Logo ── */}
-        <div className="flex items-center gap-2.5 px-5 pt-6 pb-4">
-          <div className="relative w-10 h-10 flex-shrink-0">
-            <Image src="/images/logo_icon.png" alt="DiagnosticLab" fill className="object-contain" priority />
+        {/* ── Logo + Mobile Close ── */}
+        <div className="flex items-center justify-between px-5 pt-6 pb-4">
+          <div className="flex items-center gap-2.5">
+            <div className="relative w-10 h-10 flex-shrink-0">
+              <Image src="/images/logo_icon.png" alt="DiagnosticLab" fill className="object-contain" priority />
+            </div>
+            <span className="font-bold text-surface-800 dark:text-surface-100 text-sm tracking-tight leading-tight">
+              Diagnostic<span className="text-emerald-600">Lab</span>
+            </span>
           </div>
-          <span className="font-bold text-surface-800 dark:text-surface-100 text-sm tracking-tight leading-tight">
-            Diagnostic<span className="text-emerald-600">Lab</span>
-          </span>
+          {/* Mobile close button */}
+          <button onClick={closeSidebar}
+                  aria-label="Cerrar menú"
+                  className="lg:hidden p-2 -mr-2 rounded-xl text-surface-400
+                            hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors">
+            <CloseIcon />
+          </button>
         </div>
 
         {/* ── Navigation ── */}
-        <nav className="flex-1 px-3 py-2 space-y-1">
+        <nav className="flex-1 px-3 py-2 space-y-1" aria-label="Menú principal">
           {navItems.map((item) => {
             const active = isActive(item.href)
             return (
-              <Link key={item.href} href={item.href}>
+              <Link key={item.href} href={item.href} onClick={closeSidebar}
+                    aria-current={active ? 'page' : undefined}>
                 <div className={`
                   flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer
                   transition-all duration-200
@@ -146,9 +165,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
               <p className="text-sm font-semibold mt-0.5">Conexión Segura</p>
             </div>
             <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
-              </svg>
+              <ExternalLinkIcon />
             </div>
           </div>
         </div>
@@ -156,7 +173,7 @@ export default function DashboardLayout({ children, user }: DashboardLayoutProps
 
       {/* ══════════ Main Content ══════════ */}
       <div className="flex-1 flex flex-col gap-4 min-w-0">
-        <Header user={user} onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
+        <Header user={user} onMenuToggle={toggleSidebar} />
         <main className="flex-1">{children}</main>
       </div>
     </div>

@@ -28,6 +28,10 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 
+# Cache TTL for permission queries (seconds) – configurable via settings
+from django.conf import settings as django_settings
+PERM_CACHE_TTL = getattr(django_settings, 'PERMISSION_CACHE_TTL', 300)
+
 
 def get_client_ip(request):
     """Extract client IP from request"""
@@ -155,8 +159,9 @@ def login_view(request):
     
     # Adjust refresh token expiration if remember_me is True
     if remember_me:
-        # Extend refresh token to 30 days
-        tokens['refresh_expiration'] = timezone.now() + timedelta(days=30)
+        from django.conf import settings
+        remember_days = getattr(settings, 'REMEMBER_ME_DAYS', 30)
+        tokens['refresh_expiration'] = timezone.now() + timedelta(days=remember_days)
     
     # Log successful login
     AuditLog.objects.create(
@@ -504,7 +509,7 @@ def user_permissions_view(request):
                 permission_codes = list(
                     Permission.objects.values_list('code', flat=True)
                 )
-                cache.set(cache_key, permission_codes, 300)  # 5 min cache
+                cache.set(cache_key, permission_codes, PERM_CACHE_TTL)
         else:
             from .models import RolePermission
             from django.core.cache import cache
@@ -516,7 +521,7 @@ def user_permissions_view(request):
                     .select_related('permission')
                     .values_list('permission__code', flat=True)
                 )
-                cache.set(cache_key, permission_codes, 300)  # 5 min cache
+                cache.set(cache_key, permission_codes, PERM_CACHE_TTL)
         
         data = {
             'role': role,

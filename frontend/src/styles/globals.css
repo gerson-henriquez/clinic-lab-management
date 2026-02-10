@@ -166,3 +166,9 @@
 ::selection {
   @apply bg-emerald-500/20 text-emerald-900 dark:text-emerald-100;
 }
+
+/* ── Login mesh background (extracted from inline style) ──────── */
+.login-mesh-bg {
+  background-image: radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.08) 1px, transparent 0);
+  background-size: 24px 24px;
+}

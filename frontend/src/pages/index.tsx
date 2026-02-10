@@ -24,14 +24,10 @@ export default function LoginPage() {
 
         {/* Right: Glass Login Panel */}
         <div className="flex-1 relative flex flex-col items-center justify-center
-                       bg-surface-200 dark:bg-surface-900 px-6 py-10">
+                       bg-surface-200 dark:bg-surface-900 px-4 sm:px-6 py-8 sm:py-10">
 
-          {/* Mesh grid background */}
-          <div className="absolute inset-0 pointer-events-none"
-               style={{
-                 backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(148,163,184,0.08) 1px, transparent 0)',
-                 backgroundSize: '24px 24px'
-               }} />
+          {/* Mesh grid background – uses CSS class instead of inline style */}
+          <div className="login-mesh-bg absolute inset-0 pointer-events-none" />
 
           {/* Ambient glow */}
           <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/5 dark:bg-emerald-500/3 rounded-full blur-3xl" />
@@ -53,7 +49,7 @@ export default function LoginPage() {
           </div>
 
           {/* Glass Card */}
-          <div className="relative z-10 w-full max-w-md glass-panel-solid p-8 sm:p-10
+          <div className="relative z-10 w-full max-w-md glass-panel-solid p-6 sm:p-8 md:p-10
                          animate-fade-in shadow-glass-lg">
             <LoginForm />
           </div>

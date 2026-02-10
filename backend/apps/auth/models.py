@@ -176,13 +176,17 @@ class User(AbstractUser):
     
     def record_failed_login(self, ip_address=None):
         """Record a failed login attempt and increment counter."""
+        from django.conf import settings
+        
         self.failed_login_attempts += 1
         if ip_address:
             self.last_failed_login_ip = ip_address
         
-        # Lock account after 5 failed attempts
-        if self.failed_login_attempts >= 5:
-            self.lock_account(duration_minutes=15)
+        # Lock account after threshold failed attempts (configurable in settings)
+        threshold = getattr(settings, 'ACCOUNT_LOCKOUT_THRESHOLD', 5)
+        duration = getattr(settings, 'ACCOUNT_LOCKOUT_DURATION', 30)
+        if self.failed_login_attempts >= threshold:
+            self.lock_account(duration_minutes=duration)
         
         save_fields = ['failed_login_attempts']
         if ip_address:

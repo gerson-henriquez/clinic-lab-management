@@ -1,6 +1,7 @@
 import type { AppProps } from 'next/app'
 import '@/styles/globals.css'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import ErrorBoundary from '@/components/Common/ErrorBoundary'
 import { useEffect, useState } from 'react'
 
 /**
@@ -29,8 +30,10 @@ export default function App({ Component, pageProps }: AppProps) {
 
   return (
     <ThemeProvider>
-      {/* TODO Phase 2: Add AuthProvider, NotificationProvider here */}
-      <Component {...pageProps} />
+      <ErrorBoundary>
+        {/* TODO Phase 2: Add AuthProvider, NotificationProvider here */}
+        <Component {...pageProps} />
+      </ErrorBoundary>
     </ThemeProvider>
   )
 }

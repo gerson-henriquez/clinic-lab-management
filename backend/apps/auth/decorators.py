@@ -1,11 +1,19 @@
 """
 Custom Decorators for RBAC
-Provides convenient decorators for function-based views
+Provides convenient decorators for function-based views.
+
+NOTE: These decorators are scaffolding for Phase 3+ features
+(Branch Management, Patient Management, Exam Management, etc.).
+They are NOT currently used but are part of the planned RBAC architecture.
 """
+import logging
+
 from functools import wraps
 from rest_framework.response import Response
 from rest_framework import status
 from .permissions import user_has_permission, check_permission_with_audit
+
+logger = logging.getLogger(__name__)
 
 
 def require_permission(permission_code):
@@ -234,8 +242,8 @@ def audit_action(action_name):
                             'status_code': response.status_code,
                         }
                     )
-                except:
-                    pass  # Don't fail the request if audit logging fails
+                except Exception:
+                    logger.exception('Failed to write audit log for action: %s', action_name)
             
             return response
         return wrapper

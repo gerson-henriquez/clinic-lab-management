@@ -233,6 +233,15 @@ REST_FRAMEWORK = {
         'rest_framework.filters.SearchFilter',
         'rest_framework.filters.OrderingFilter',
     ],
+    # Global throttling – prevents API abuse (Context7 DRF best practice)
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',     # Unauthenticated requests
+        'user': '1000/hour',    # Authenticated requests
+    },
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
     # API Documentation (Swagger/OpenAPI)
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
@@ -502,10 +511,6 @@ AUTHENTICATION_BACKENDS = [
 # - Login: 5 attempts per minute per IP
 # - API endpoints: 100 requests per minute per user
 
-RATELIMIT_ENABLE = True
-RATELIMIT_USE_CACHE = 'default'  # Use Redis for rate limiting
-
-
 # ==============================================================================
 # AUDIT LOGGING CONFIGURATION
 # ==============================================================================
@@ -520,9 +525,11 @@ AUDIT_LOG_SENSITIVE_FIELDS = ['password', 'token', 'secret', 'key']  # Never log
 # ACCOUNT SECURITY CONFIGURATION
 # ==============================================================================
 #
-# Account lockout and security settings
+# Account lockout and security settings (referenced by User model & auth views)
 
-ACCOUNT_LOCKOUT_THRESHOLD = 5  # Lock after 5 failed attempts
-ACCOUNT_LOCKOUT_DURATION = 30  # Lock for 30 minutes
-PASSWORD_RESET_TIMEOUT = 3600  # Password reset link valid for 1 hour
+ACCOUNT_LOCKOUT_THRESHOLD = env.int('ACCOUNT_LOCKOUT_THRESHOLD', default=5)
+ACCOUNT_LOCKOUT_DURATION = env.int('ACCOUNT_LOCKOUT_DURATION', default=30)  # minutes
+PASSWORD_RESET_TIMEOUT = env.int('PASSWORD_RESET_TIMEOUT', default=3600)  # seconds
+REMEMBER_ME_DAYS = env.int('REMEMBER_ME_DAYS', default=30)
+PERMISSION_CACHE_TTL = env.int('PERMISSION_CACHE_TTL', default=300)  # seconds (5 min)
 

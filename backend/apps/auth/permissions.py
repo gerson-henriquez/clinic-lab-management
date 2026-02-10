@@ -138,34 +138,10 @@ def user_has_permission(user, permission_code):
         return RolePermission.objects.filter(
             role=role,
             permission__code=permission_code,
-        ).exists()
+        ).select_related('permission').exists()
     except AttributeError:
         logger.warning('User %s has no profile for permission check', user.id)
         return False
-
-
-def get_user_permissions(user):
-    """
-    Get all permission codes for a user.
-
-    Args:
-        user: User instance
-
-    Returns:
-        List of permission code strings
-    """
-    try:
-        role = user.profile.role
-        if role == 'superadmin':
-            from .models import Permission
-            return list(Permission.objects.values_list('code', flat=True))
-        return list(
-            RolePermission.objects.filter(role=role)
-            .values_list('permission__code', flat=True)
-        )
-    except AttributeError:
-        logger.warning('User %s has no profile for permissions lookup', user.id)
-        return []
 
 
 def check_permission_with_audit(user, permission_code, request, details=None):
